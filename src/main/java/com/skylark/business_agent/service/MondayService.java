@@ -11,7 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class MondayService {
@@ -36,7 +38,6 @@ public class MondayService {
                 .build();
     }
 
-    // Fetch all boards
     public String getBoards() {
 
         String query = """
@@ -51,30 +52,26 @@ public class MondayService {
         return executeQuery(query);
     }
 
-    // Deals Board JSON
     public String getDeals() {
         return fetchBoard(dealsBoardId);
     }
 
-    // Work Orders Board JSON
     public String getWorkOrders() {
         return fetchBoard(workOrdersBoardId);
     }
-
-    // ===========================
-    // NEW METHODS
-    // ===========================
 
     public List<Deal> getDealsData() throws Exception {
 
         String json = getDeals();
 
-        JsonNode items = mapper.readTree(json)
+        JsonNode board = mapper.readTree(json)
                 .path("data")
                 .path("boards")
-                .get(0)
-                .path("items_page")
-                .path("items");
+                .get(0);
+
+        Map<String, String> columnMap = buildColumnMap(board);
+
+        JsonNode items = board.path("items_page").path("items");
 
         List<Deal> deals = new ArrayList<>();
 
@@ -87,8 +84,11 @@ public class MondayService {
 
             for (JsonNode column : item.path("column_values")) {
 
+                String columnId = column.path("id").asText();
+                String columnTitle = columnMap.getOrDefault(columnId, columnId);
+
                 deal.getFields().put(
-                        column.path("id").asText(),
+                        columnTitle,
                         column.path("text").asText("")
                 );
             }
@@ -103,12 +103,14 @@ public class MondayService {
 
         String json = getWorkOrders();
 
-        JsonNode items = mapper.readTree(json)
+        JsonNode board = mapper.readTree(json)
                 .path("data")
                 .path("boards")
-                .get(0)
-                .path("items_page")
-                .path("items");
+                .get(0);
+
+        Map<String, String> columnMap = buildColumnMap(board);
+
+        JsonNode items = board.path("items_page").path("items");
 
         List<WorkOrder> workOrders = new ArrayList<>();
 
@@ -121,8 +123,11 @@ public class MondayService {
 
             for (JsonNode column : item.path("column_values")) {
 
+                String columnId = column.path("id").asText();
+                String columnTitle = columnMap.getOrDefault(columnId, columnId);
+
                 workOrder.getFields().put(
-                        column.path("id").asText(),
+                        columnTitle,
                         column.path("text").asText("")
                 );
             }
@@ -133,43 +138,54 @@ public class MondayService {
         return workOrders;
     }
 
-    // ===========================
-    // PRIVATE METHODS
-    // ===========================
+    private Map<String, String> buildColumnMap(JsonNode board) {
 
-  private String fetchBoard(Long boardId) {
+        Map<String, String> map = new HashMap<>();
 
-    String query = """
-    {
-      boards(ids:%d){
-        id
-        name
+        for (JsonNode column : board.path("columns")) {
 
-        columns{
-          id
-          title
-          type
+            map.put(
+                    column.path("id").asText(),
+                    column.path("title").asText()
+            );
         }
 
-        items_page{
-          items{
+        return map;
+    }
+
+    private String fetchBoard(Long boardId) {
+
+        String query = """
+        {
+          boards(ids:%d){
             id
             name
 
-            column_values{
+            columns{
               id
-              text
+              title
               type
-              value
+            }
+
+            items_page{
+              items{
+                id
+                name
+
+                column_values{
+                  id
+                  text
+                  type
+                  value
+                }
+              }
             }
           }
         }
-      }
-    }
-    """.formatted(boardId);
+        """.formatted(boardId);
 
-    return executeQuery(query);
-}
+        return executeQuery(query);
+    }
 
     private String executeQuery(String query) {
 
