@@ -17,11 +17,11 @@ function App() {
     try {
 
       const response = await axios.post(
-        "http://localhost:8080/api/chat",
-        {
-          question: question
-        }
-      );
+      "https://skylark-business-intelligence-agent.onrender.com/api/chat",
+      {
+        question: question
+      }
+    );
 
       setAnswer(response.data.answer);
 
