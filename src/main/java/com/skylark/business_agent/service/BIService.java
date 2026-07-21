@@ -2,20 +2,21 @@ package com.skylark.business_agent.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.skylark.business_agent.ai.GeminiService;
+import com.skylark.business_agent.ai.GroqService;
 import org.springframework.stereotype.Service;
 
 @Service
 public class BIService {
 
     private final MondayService mondayService;
-    private final GeminiService geminiService;
+    private final GroqService groqService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public BIService(MondayService mondayService,
-                     GeminiService geminiService) {
+                     GroqService groqService) {
+
         this.mondayService = mondayService;
-        this.geminiService = geminiService;
+        this.groqService = groqService;
     }
 
     public String processQuestion(String question) {
@@ -63,7 +64,7 @@ public class BIService {
                     Keep the answer concise and professional.
                     """.formatted(question, deals, workOrders);
 
-            return geminiService.askGemini(prompt);
+            return groqService.askGroq(prompt);
 
         } catch (Exception e) {
             return "Unable to process the business data. Error: " + e.getMessage();
@@ -91,7 +92,6 @@ public class BIService {
             for (JsonNode column : item.path("column_values")) {
 
                 String columnName = column.path("id").asText();
-
                 String value = column.path("text").asText();
 
                 if (value == null || value.isBlank() || value.equalsIgnoreCase("null")) {

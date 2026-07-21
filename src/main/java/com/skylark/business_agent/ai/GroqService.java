@@ -9,13 +9,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
-public class GeminiService {
+public class GroqService {
 
     private final WebClient webClient;
     private final String apiKey;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public GeminiService(@Value("${groq.api.key}") String apiKey) {
+    public GroqService(@Value("${groq.api.key}") String apiKey) {
 
         this.apiKey = apiKey;
 
@@ -25,7 +25,7 @@ public class GeminiService {
                 .build();
     }
 
-    public String askGemini(String prompt) {
+    public String askGroq(String prompt) {
 
         try {
 
@@ -39,11 +39,12 @@ public class GeminiService {
                 }
               ]
             }
-            """.formatted(prompt.replace("\"","\\\\\""));
+            """.formatted(prompt.replace("\"", "\\\\\""));
 
             String response = webClient.post()
                     .uri("/chat/completions")
-                    .header("Authorization","Bearer " + apiKey)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+                    .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(body)
                     .retrieve()
                     .bodyToMono(String.class)
@@ -58,10 +59,7 @@ public class GeminiService {
                     .asText();
 
         } catch (Exception e) {
-
-            return "Groq Error:\n" + e.getMessage();
-
+            return "Groq API Error:\n" + e.getMessage();
         }
-
     }
 }
