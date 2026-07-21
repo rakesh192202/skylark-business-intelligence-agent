@@ -47,13 +47,22 @@ public class MondayController {
     public List<WorkOrder> getWorkOrdersJava() throws Exception {
         return mondayService.getWorkOrdersData();
     }
-    @GetMapping("/debug/deals")
-public String debugDeals() {
-    return mondayService.getDeals();
-}
 
-@GetMapping("/debug/workorders")
-public String debugWorkOrders() {
-    return mondayService.getWorkOrders();
-}
+    // Debug Deals
+    @GetMapping("/debug/deals")
+    public String debugDeals() {
+        return mondayService.getDeals();
+    }
+
+    // Debug Work Orders
+    @GetMapping("/debug/workorders")
+    public String debugWorkOrders() {
+        return mondayService.getWorkOrders();
+    }
+
+    // Debug Boards (NEW)
+    @GetMapping("/debug/boards")
+    public String debugBoards() {
+        return mondayService.getBoards();
+    }
 }

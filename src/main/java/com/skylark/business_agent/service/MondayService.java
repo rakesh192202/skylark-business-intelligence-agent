@@ -137,29 +137,39 @@ public class MondayService {
     // PRIVATE METHODS
     // ===========================
 
-    private String fetchBoard(Long boardId) {
+  private String fetchBoard(Long boardId) {
 
-        String query = """
-        {
-          boards(ids:%d){
+    String query = """
+    {
+      boards(ids:%d){
+        id
+        name
+
+        columns{
+          id
+          title
+          type
+        }
+
+        items_page{
+          items{
             id
             name
-            items_page{
-              items{
-                id
-                name
-                column_values{
-                  id
-                  text
-                }
-              }
+
+            column_values{
+              id
+              text
+              type
+              value
             }
           }
         }
-        """.formatted(boardId);
-
-        return executeQuery(query);
+      }
     }
+    """.formatted(boardId);
+
+    return executeQuery(query);
+}
 
     private String executeQuery(String query) {
 
