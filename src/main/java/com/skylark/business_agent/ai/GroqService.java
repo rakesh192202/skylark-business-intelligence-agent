@@ -8,6 +8,9 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.List;
+import java.util.Map;
+
 @Service
 public class GroqService {
 
@@ -29,17 +32,15 @@ public class GroqService {
 
         try {
 
-            String body = """
-            {
-              "model":"llama-3.3-70b-versatile",
-              "messages":[
-                {
-                  "role":"user",
-                  "content":"%s"
-                }
-              ]
-            }
-            """.formatted(prompt.replace("\"", "\\\\\""));
+            Map<String, Object> body = Map.of(
+                    "model", "llama-3.3-70b-versatile",
+                    "messages", List.of(
+                            Map.of(
+                                    "role", "user",
+                                    "content", prompt
+                            )
+                    )
+            );
 
             String response = webClient.post()
                     .uri("/chat/completions")
@@ -47,6 +48,11 @@ public class GroqService {
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(body)
                     .retrieve()
+                    .onStatus(
+                            status -> status.isError(),
+                            clientResponse -> clientResponse.bodyToMono(String.class)
+                                    .map(errorBody -> new RuntimeException(errorBody))
+                    )
                     .bodyToMono(String.class)
                     .block();
 
