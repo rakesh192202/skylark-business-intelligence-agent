@@ -15,12 +15,12 @@ public class GeminiService {
     private final String apiKey;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public GeminiService(@Value("${gemini.api.key}") String apiKey) {
+    public GeminiService(@Value("${groq.api.key}") String apiKey) {
 
         this.apiKey = apiKey;
 
         this.webClient = WebClient.builder()
-                .baseUrl("https://generativelanguage.googleapis.com")
+                .baseUrl("https://api.groq.com/openai/v1")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }
@@ -31,44 +31,37 @@ public class GeminiService {
 
             String body = """
             {
-              "contents": [
+              "model":"llama-3.3-70b-versatile",
+              "messages":[
                 {
-                  "parts": [
-                    {
-                      "text": "%s"
-                    }
-                  ]
+                  "role":"user",
+                  "content":"%s"
                 }
               ]
             }
-            """.formatted(prompt.replace("\"", "\\\""));
+            """.formatted(prompt.replace("\"","\\\\\""));
 
             String response = webClient.post()
-                    .uri("/v1beta/models/gemini-3.5-flash:generateContent")
-                    .header("x-goog-api-key", apiKey)
-                    .contentType(MediaType.APPLICATION_JSON)
+                    .uri("/chat/completions")
+                    .header("Authorization","Bearer " + apiKey)
                     .bodyValue(body)
                     .retrieve()
-                    .onStatus(
-                            status -> status.isError(),
-                            clientResponse -> clientResponse.bodyToMono(String.class)
-                                    .map(errorBody -> new RuntimeException("Gemini API Error:\n" + errorBody))
-                    )
                     .bodyToMono(String.class)
                     .block();
 
             JsonNode root = objectMapper.readTree(response);
 
-            return root.path("candidates")
+            return root.path("choices")
                     .get(0)
+                    .path("message")
                     .path("content")
-                    .path("parts")
-                    .get(0)
-                    .path("text")
                     .asText();
 
         } catch (Exception e) {
-            return "Gemini Error:\n" + e.getMessage();
+
+            return "Groq Error:\n" + e.getMessage();
+
         }
+
     }
 }
