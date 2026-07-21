@@ -4,7 +4,7 @@ import com.skylark.business_agent.service.MondayService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "*")
 @RequestMapping("/api")
 public class MondayController {
 
