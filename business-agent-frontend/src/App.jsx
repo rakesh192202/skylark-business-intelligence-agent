@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import ReactMarkdown from "react-markdown";
 import "./App.css";
 
 function App() {
@@ -17,21 +18,23 @@ function App() {
     try {
 
       const response = await axios.post(
-      "https://skylark-business-intelligence-agent.onrender.com/api/chat",
-      {
-        question: question
-      }
-    );
+        "https://skylark-business-intelligence-agent.onrender.com/api/chat",
+        {
+          question
+        }
+      );
 
       setAnswer(response.data.answer);
 
     } catch (e) {
 
-      setAnswer("Error : " + e.message);
+      setAnswer("❌ Error: " + e.message);
+
+    } finally {
+
+      setLoading(false);
 
     }
-
-    setLoading(false);
   }
 
   return (
@@ -40,39 +43,46 @@ function App() {
 
       <h1>🚁 Skylark Business Intelligence Agent</h1>
 
-      <p>
+      <p className="subtitle">
         Ask founder-level business questions
       </p>
 
       <textarea
-
         rows="4"
-
         value={question}
-
-        placeholder="How is our Energy sector pipeline?"
-
-        onChange={(e)=>setQuestion(e.target.value)}
-
+        placeholder="Example: How many open deals do we have?"
+        onChange={(e) => setQuestion(e.target.value)}
       />
 
-      <button onClick={askAI}>
-
-        Ask AI
-
+      <button onClick={askAI} disabled={loading}>
+        {loading ? "Analyzing..." : "Ask AI"}
       </button>
 
-      {loading && <h3>Analyzing business data...</h3>}
+      {loading &&
 
-      <div className="response">
+        <div className="loading">
 
-        <pre>
+          <div className="spinner"></div>
 
-          {answer}
+          <p>Analyzing business data...</p>
 
-        </pre>
+        </div>
 
-      </div>
+      }
+
+      {answer && (
+
+        <div className="response">
+
+          <ReactMarkdown>
+
+            {answer}
+
+          </ReactMarkdown>
+
+        </div>
+
+      )}
 
     </div>
 
