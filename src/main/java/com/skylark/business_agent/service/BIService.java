@@ -12,9 +12,7 @@ public class BIService {
     private final GroqService groqService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public BIService(MondayService mondayService,
-                     GroqService groqService) {
-
+    public BIService(MondayService mondayService, GroqService groqService) {
         this.mondayService = mondayService;
         this.groqService = groqService;
     }
